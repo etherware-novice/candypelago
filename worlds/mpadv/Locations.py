@@ -28,7 +28,7 @@ locDesert_table = [
     "Quest: Game Mage",
     "Quest: Hammerama",
     "Quest: Mysterious Riddles",    # note: this one is seperated from the main desert area and requires diff. key
-    "Quest: Treasure of Mystery!
+    "Quest: Treasure of Mystery!"
 ]
 
 locSea_table = [
@@ -77,4 +77,4 @@ locBowser_table = {
 }
 
 mpadv_locations = [*locTown_table, *locDesert_table, *locSea_table,
-                   *locBooSnow_table, *locJungle_table, locBowser_table.keys()]
+                   *locBooSnow_table, *locJungle_table, *locBowser_table.keys()]

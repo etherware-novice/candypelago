@@ -1,11 +1,11 @@
 import settings
 import typing
-from .options import MyGameOptions  # the options we defined earlier
+from .Options import MPADVOptions  # the options we defined earlier
 from .Locations import mpadv_locations  # same as above
 from .Regions import create_regions
 from .Rules import set_rules
-from worlds.AutoWorld import World
-from BaseClasses import Region, Location, Entrance, Item, RegionType, ItemClassification
+from worlds.AutoWorld import World, WebWorld
+from BaseClasses import Region, Location, Entrance, Item, ItemClassification
 
 
 class MPADVWebWorld(WebWorld):
@@ -31,8 +31,9 @@ class MPADVWorld(World):
     """
     game = "Mario Party Advance"
     topology_present = True
+    option_definitions = MPADVOptions
 
-    base_id = 0  # REPLACE WITH RANDOM NUMBER, IN RANGE OF 2^53
+    base_id = 1  # REPLACE WITH RANDOM NUMBER, IN RANGE OF 2^53
 
     item_name_to_id = {name: id for
                        id, name in enumerate(mpadv_items.keys(), base_id)}
