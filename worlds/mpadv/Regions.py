@@ -13,14 +13,14 @@ mpadv_regions = {
     "Horror/Snow Area": locBooSnow_table,
     "Seaside Area": locSea_table,
     "Desert Area": locDesert_table,
-    "Bowser's Pipeyard": locBowser_table
+    "Bowser's Pipeyard": [loc for loc in locBowser_table.keys()]
 }
 
 
 def create_regions(mw: MultiWorld, player: int, idMap:Dict):
 
     temp_regions = {}
-    for areaName, areaTable in mpadv_regions:
+    for areaName, areaTable in mpadv_regions.items():
         areaInfo = Region(areaName, player, mw)
         areaRenderTable = [MPADVLocation(player, quest, idMap[quest], areaInfo) for quest in areaTable]
         areaInfo.locations.extend(areaRenderTable)
