@@ -4,6 +4,7 @@ from .Options import MPADVOptions  # the options we defined earlier
 from .Locations import mpadv_locations  # same as above
 from .Regions import create_regions
 from .Rules import set_rules
+from .Rom import Rom
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import Region, Location, Entrance, Item, ItemClassification
 
@@ -22,6 +23,16 @@ mpadv_items: typing.Dict[str, int] = {
     "Roll Maximum Increase": 10,
     "Roll Mushroom": 0  # junk item
 }
+
+
+class MPADVSettings(settings.Group):
+    class MPADVRomFile(settings.UserFilePath):
+        """File name of your English Pokemon Emerald ROM"""
+        description = "Mario Party Advance ROM File"
+        copy_to = "Mario Party Advance (USA).gba"
+        #md5s = [PokemonEmeraldDeltaPatch.hash]
+
+    rom_file: MPADVRomFile = MPADVRomFile(MPADVRomFile.copy_to)
 
 
 class MPADVWorld(World):
@@ -70,3 +81,7 @@ class MPADVWorld(World):
             classification = ItemClassification.filler
 
         return MPADVItem(name, classification, item_id, self.player)
+
+    def generate_output(self, output_directory: str) -> None:
+        rom = Rom(self.multiworld, self.player)
+        rom.close(output_directory)
