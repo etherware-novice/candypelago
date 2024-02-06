@@ -1,6 +1,7 @@
 import settings
 import typing
 from .Options import MPADVOptions  # the options we defined earlier
+from .Items import mpadv_items
 from .Locations import mpadv_locations  # same as above
 from .Regions import create_regions
 from .Rules import set_rules
@@ -14,15 +15,6 @@ class MPADVWebWorld(WebWorld):
     bug_report_page = "example.net"  # dont forget to update with repo name
 
 
-class MPADVItem(Item):
-    game = "Mario Party Advance"
-
-
-mpadv_items: typing.Dict[str, int] = {
-    "Quest Completion": 50,
-    "Roll Maximum Increase": 10,
-    "Roll Mushroom": 0  # junk item
-}
 
 
 class MPADVSettings(settings.Group):
@@ -46,10 +38,8 @@ class MPADVWorld(World):
 
     base_id = 1  # REPLACE WITH RANDOM NUMBER, IN RANGE OF 2^53
 
-    item_name_to_id = {name: id for
-                       id, name in enumerate(mpadv_items.keys(), base_id)}
-    location_name_to_id = {name: id for
-                           id, name in enumerate(mpadv_locations, base_id)}
+    item_name_to_id = mpadv_items
+    location_name_to_id = mpadv_locations
 
     web = MPADVWebWorld()
     required_client_version = (0, 4, 3)
