@@ -76,5 +76,8 @@ locBowser_table = {
     "Bowser Quest: Final Showdown": 49
 }
 
-mpadv_locations = [*locTown_table, *locDesert_table, *locSea_table,
-                   *locBooSnow_table, *locJungle_table, *locBowser_table.keys()]
+
+mpadv_locations = {name: id for id, name in enumerate(
+    [*locTown_table, *locDesert_table, *locSea_table,
+        *locBooSnow_table, *locJungle_table, *locBowser_table.keys()], 5454540
+)}
