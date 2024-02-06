@@ -158,5 +158,23 @@ class MPADVClient(BizHawkClient):
                     "locations": list(locations_sent)
                 }])
 
+
+            # writing quest completions
+            byte = 0
+            quest_hex = [0x0 for i in range(0, 6)]
+            for i in ctx.items_received:
+                if i != mpadv_locations["Quest Completed"]:
+                    continue
+
+                curbyte = quest_hex[byte]
+                curbyte <<= 1
+                curbyte |= 1
+                quest_hex[byte] = curbyte
+
+                if curbyte == 0xFF:
+                    byte += 1
+
+            await bizhawk.write(ctx.bizhawk_ctx, [(0x34E14, quest_hex, "EWRAM")])
+
         except bizhawk.RequestFailedError:
             pass
