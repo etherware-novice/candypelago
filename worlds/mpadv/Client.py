@@ -134,10 +134,10 @@ class MPADVClient(BizHawkClient):
             ])
 
             quests_loc = gamedat[0]
-            quests_items = gamedat[1]
 
             locations_sent = []
 
+            # reading completed quests from the discovered bitfield
             byte = 0
             bit = 0
             for i in range(0, len(bitorder)):
