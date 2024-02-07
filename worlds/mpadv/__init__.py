@@ -1,11 +1,12 @@
 import settings
 import typing
 from .Options import MPADVOptions  # the options we defined earlier
-from .Items import mpadv_items
+from .Items import MPADVItem, mpadv_items
 from .Locations import mpadv_locations  # same as above
 from .Regions import create_regions
 from .Rules import set_rules
 from .Rom import Rom
+from .Client import MPADVClient
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import Region, Location, Entrance, Item, ItemClassification
 

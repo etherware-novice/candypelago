@@ -17,7 +17,7 @@ mpadv_regions = {
 }
 
 
-def create_regions(mw: MultiWorld, player: int, idMap:Dict):
+def create_regions(mw: MultiWorld, player: int, idMap:dict):
 
     temp_regions = {}
     for areaName, areaTable in mpadv_regions.items():

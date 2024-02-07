@@ -65,7 +65,7 @@ bitorder = [
 
     "Bowser Quest: Goal Tenderizer",
     "Quest: Hey, UFO!",
-    "Quest: Treasure of Mystery!"
+    "Quest: Treasure of Mystery!",
     "Quest: Condo of Mystery!",
     "Quest: Dino of Mystery!",
     "Bowser Quest: Chillin' Villan",
@@ -88,7 +88,7 @@ bitorder = [
     "Quest: Duel Tower 1F",
     "Quest: Duel Tower 2F",
     "Quest: Duel Tower 3F",
-    "Quest: Mustached Hero!"
+    "Quest: Mustached Hero!",
 
     "Quest: Blooper Battle",
     "Quest: Chomper Stomper",
@@ -124,6 +124,8 @@ class MPADVClient(BizHawkClient):
         ctx.items_handling = 0b101
         ctx.want_slot_data = True
         ctx.watcher_timeout = 0.125
+
+        return True
 
     async def game_watcher(self, ctx: BizHawkClientContext) -> None:
         from CommonClient import logger

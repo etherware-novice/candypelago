@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List, Tuple
 import io, os, bsdiff4
 
 from worlds.Files import APDeltaPatch
+from BaseClasses import MultiWorld, Region, Entrance, Location
 from settings import get_settings
 
 class MPADVDeltaPatch(APDeltaPatch):
