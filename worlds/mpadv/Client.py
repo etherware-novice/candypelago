@@ -8,6 +8,7 @@ import sys
 import logging
 import math
 import asyncio
+from itertools import zip_longest
 from .Items import mpadv_items
 from .Locations import mpadv_locations
 
@@ -112,6 +113,23 @@ class MPADVClient(BizHawkClient):
     rom_slot_name: Optional[str]
     player: int
 
+    """
+    A mapping for ram values with recognizable names.
+    The first string in the value set is memory region, second is the address,
+    and third is the optional bitmask.
+    If the bitmask is not used, leave it as 0xFF
+    """
+    codepoints: dict[str, Set[str, int, int]] = {
+        "Quests Discovered":    ("EWRAM", 0x34E00, 0xFF),
+        "Quests Completed":     ("EWRAM", 0x34E14, 0xFF),
+        "Game Mode":            ("unknown", 0x38001, 0xFF),    # check mem region at some point
+        "Current Char":         ("unknown", 0x440E, 0xFF),
+        "Minigames Discovered": ("unknown", 0x398C1, 0xFF),
+        "Current Minigame":     ("unknown", 0x440D, 0xFF),
+        "Mushroom Total":       ("unknown", 0x3CBF1, 0x0F),
+        "Passport Creation":    ("unknown", 0x39055, 0x01)
+    }
+
     def __init__(self) -> None:
         super().__init__()
         self.local_checked_locations = set()
@@ -131,11 +149,7 @@ class MPADVClient(BizHawkClient):
         from CommonClient import logger
 
         try:
-            gamedat = await bizhawk.read(ctx.bizhawk_ctx, [
-                (0x34E00, 6, "EWRAM"), (0x34E14, 6, "EWRAM")    # quests completed and discovered
-            ])
-
-            quests_loc = gamedat[0]
+            quests_loc = await self.readByName(ctx, "Quests Discovered", 6)
 
             locations_sent = []
 
@@ -144,12 +158,13 @@ class MPADVClient(BizHawkClient):
             bit = 0
             for i in range(0, len(bitorder)):
                 quest_name = bitorder[i]
+                quest_id = mpadv_locations[quest_name]
                 if bit > 7:
                     bit = 0
                     byte += 1
 
-                if quests_loc[byte] & 1 << bit:
-                    locations_sent.append(mpadv_locations[quest_name])
+                if quests_loc[byte] & (1 << bit):
+                    locations_sent.append(quest_id)
 
                 bit += 1
 
@@ -176,7 +191,38 @@ class MPADVClient(BizHawkClient):
                 if curbyte == 0xFF:
                     byte += 1
 
-            await bizhawk.write(ctx.bizhawk_ctx, [(0x34E14, quest_hex, "EWRAM")])
+            await self.writeByName(ctx, "Quests Completed", quest_hex)
 
         except bizhawk.RequestFailedError:
             pass
+
+    async def readByName(self, ctx: BizHawkClientContext, name:str, bytecount:int) -> list:
+        region, addr, mask = self.codepoints.get(name, ("ROM", 0x0, 0x0))
+        shift = 0
+        if mask == 0x0:
+            print(f"Error while reading codepoint {name} ({addr}): Invalid mask")
+
+        else:
+            shift = 0
+            tempmask = mask
+            while not (tempmask & 1):
+                tempmask >>= 1
+                shift += 1
+
+        ramslice = await bizhawk.read(ctx.bizhawk_ctx, [(addr, bytecount, region)])
+        return [(x & mask) >> shift for x in ramslice[0]]
+
+    async def writeByName(self, ctx: BizHawkClientContext, name:str, written) -> None:
+        region, addr, mask = self.codepoints.get(name, ("ROM", 0x0, 0x0))
+        bytecount = len(written)
+        if mask == 0x0:
+            print(f"Error while writing codepoint {name} ({addr}): Invalid mask")
+
+        if mask != 0xFF:
+            underlying = await self.readByName(ctx, name, bytecount)
+            written = [
+                (new & mask) | (old & ~mask) for
+                new, old in zip_longest(written, underlying, fillvalue=0x0)
+            ]
+
+        return await bizhawk.write(ctx.bizhawk_ctx, [(addr, written, region)])
