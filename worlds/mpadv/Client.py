@@ -119,7 +119,7 @@ class MPADVClient(BizHawkClient):
     and third is the optional bitmask.
     If the bitmask is not used, leave it as 0xFF
     """
-    codepoints: dict[str, Set[str, int, int]] = {
+    codepoints = {
         "Quests Discovered":    ("EWRAM", 0x34E00, 0xFF),
         "Quests Completed":     ("EWRAM", 0x34E14, 0xFF),
         "Game Mode":            ("unknown", 0x38001, 0xFF),    # check mem region at some point
@@ -149,7 +149,7 @@ class MPADVClient(BizHawkClient):
         from CommonClient import logger
 
         try:
-            quests_loc = await self.readByName(ctx, "Quests Discovered", 6)
+            quests_loc = await self.readByName(ctx, "Quests Discovered", 7)
 
             locations_sent = []
 
@@ -178,9 +178,9 @@ class MPADVClient(BizHawkClient):
 
             # writing quest completions
             byte = 0
-            quest_hex = [0x0 for i in range(0, 6)]
+            quest_hex = [0x0 for i in range(0, 7)]
             for i in ctx.items_received:
-                if i != mpadv_locations["Quest Completed"]:
+                if i.item != mpadv_items["Quest Completion"]:
                     continue
 
                 curbyte = quest_hex[byte]
@@ -190,6 +190,9 @@ class MPADVClient(BizHawkClient):
 
                 if curbyte == 0xFF:
                     byte += 1
+
+                if byte >= 7:
+                    break
 
             await self.writeByName(ctx, "Quests Completed", quest_hex)
 
