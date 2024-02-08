@@ -76,8 +76,72 @@ locBowser_table = {
     "Bowser Quest: Final Showdown": 49
 }
 
+locQuest_table = [*locTown_table, *locDesert_table, *locSea_table,
+                  *locBooSnow_table, *locJungle_table, *locBowser_table.keys()]
+
+
+# this is in the order of the internal bitfield
+locChar_table = [
+    "Meet Mr. I",
+    "Meet Bob-omba",
+    "Meet Mushbert",
+    "Meet Dolphin",
+    "Meet Ukiki",
+    "Meet Kamek",
+    "Meet Lantern Ghost",
+    "Meet Shroomlock",
+
+    "Meet Mrs. S",
+    "Meet Mr. E",
+    "Meet Bullet Bill",
+    "Meet Bowser",
+    "Meet Goomba",
+    "Meet Goombob",
+    "Meet Blooper",
+    "Meet Coach",
+
+    "Meet Toady",
+    "Meet Pokey",   # or porky :)
+    "Meet Klepto",
+    "Meet Lakitu",
+    "Meet Mr. Blizzard",
+    "Meet Mouser",
+    "Meet Montey Mole",
+    "Meet Boo",
+
+    "Meet Dorrie",
+    "Meet Thwomp",
+    "Meet Koopa",
+    "Meet Paratroopa",
+    "Meet Ninji",
+    "Meet Piranha Plant",
+    "Meet Whomp",
+    "Meet Flutter",
+
+    "Meet Hulu",    # no way they predicted the streaming service
+    "Meet Hammer Bro",
+    "Meet Salvo",
+    "Meet Amp",
+    "Meet Cheep Cheep",
+    "Meet Hoot",
+    "Meet Petal Guy",
+    "Meet Fly Guy",
+
+    "Meet Shy Guy",
+    "Meet Penguin",
+    "Meet Sushi",
+    "Meet Big Bob-omb",
+    "Meet Bob-omb",
+    "Meet Koopa Kid",
+    "Meet Snifit",
+    "Meet Mechakoopa",
+
+    "Meet Spear Guy",
+    "Meet Goombetty",
+    "Meet Akiki",
+    "Meet Chain Chomp"
+]
 
 mpadv_locations = {name: id for id, name in enumerate(
-    [*locTown_table, *locDesert_table, *locSea_table,
-        *locBooSnow_table, *locJungle_table, *locBowser_table.keys()], 5454540
+    [*locQuest_table, *locChar_table], 5454540
 )}

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Optional, Dict, Set, List
 from NetUtils import ClientStatus
 from itertools import zip_longest
 from .Items import mpadv_items
-from .Locations import mpadv_locations
+from .Locations import mpadv_locations, locChar_table
 
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
@@ -79,6 +79,7 @@ class MPADVClient(BizHawkClient):
 
     codepoints = {
         "Quests Discovered":    ("EWRAM", 0x34E00, 0xFF),
+        "Character Library":    ("EWRAM", 0x34E08, 0xFF),
         "Quests Completed":     ("EWRAM", 0x34E14, 0xFF),
         "Game Mode":            ("unknown", 0x38001, 0xFF),    # check mem region at some point
         "Current Char":         ("unknown", 0x440E, 0xFF),
@@ -124,11 +125,29 @@ class MPADVClient(BizHawkClient):
 
             locations_sent = []
 
+            # this needs to be the first check for the bowser char library condition
+            byte = 0
+            bit = 0
+            chars_loc = await self.readByName(ctx, "Character Library", 8)
+            for char_name in locChar_table:
+                char_id = mpadv_locations[char_name]
+                if bit > 7:
+                    bit = 0
+                    byte += 1
+
+                if chars_loc[byte] & (1 << bit):
+                    locations_sent.append(char_id)
+
+                bit += 1
+
+            # this is to prevent sending game-start characters (bowser) too early
+            if len(locations_sent) < 2:
+                locations_sent.clear()
+
             # reading completed quests from the discovered bitfield
             byte = 0
             bit = 0
-            for i in range(0, len(bitorder)):
-                quest_name = bitorder[i]
+            for quest_name in bitorder:
                 quest_id = mpadv_locations[quest_name]
                 if bit > 7:
                     bit = 0
