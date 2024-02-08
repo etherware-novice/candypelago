@@ -76,7 +76,7 @@ class MPADVClient(BizHawkClient):
     system = "GBA"
     patch_suffix = ".apmpadv"
     local_checked_locations: Set[int]
-    items_unprocessed: list[int]    # item queue
+    item_process = 0    # index into the items_received for items that have been gotten
 
     codepoints = {
         "Quests Discovered":    ("EWRAM", 0x34E00, 0xFF),
@@ -141,10 +141,6 @@ class MPADVClient(BizHawkClient):
 
                 bit += 1
 
-            # this is to prevent sending game-start characters (bowser) too early
-            if len(locations_sent) < 2:
-                locations_sent.clear()
-
             # reading completed quests from the discovered bitfield
             byte = 0
             bit = 0
@@ -172,7 +168,7 @@ class MPADVClient(BizHawkClient):
                 }])
 
 
-            # writing quest completions
+            # setting flags based on gotten items
             byte = 0
             quest_hex = [0x0 for i in range(0, 7)]
             for i in ctx.items_received:
@@ -192,35 +188,24 @@ class MPADVClient(BizHawkClient):
 
             await self.writeByName(ctx, "Quests Completed", quest_hex)
 
-            # one-time item queue clearing
-            processed = []
-            newshroom = 0
-            for item in self.items_unprocessed:
-                if item == mpadv_items["Roll Mushroom"] and newshroom[0] < 99:
-                    newshroom += 1
-                    processed.append(item)
 
-            if newshroom:
-                currentshroom = await self.readByName(ctx, "Mushroom Total", 1)
+            # individual item handling
+            if self.item_process > len(ctx.items_received):
+                self.item_process = 0
+            elif self.item_process < len(ctx.items_received):
+                curitem = ctx.items_received[self.item_process]
+                if curitem == mpadv_items["Roll Mushroom"]:
+                    currentshroom = await self.readByName(ctx, "Mushroom Total", 1)
+                    currentshroom[0] += 1
+                    if currentshroom[0] < 100:
+                        await self.writeByName(ctx, "Mushroom Total", currentshroom)
+                        self.item_process += 1
 
-                await self.writeByName(ctx, "Mushroom Total", [currentshroom + newshroom])
-
-            for item in processed:
-                try:
-                    self.items_unprocessed.remove(item)
-                except ValueError:
-                    pass
-
+                else:
+                    self.item_process += 1
 
         except bizhawk.RequestFailedError:
             pass
-
-    async def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
-        if cmd == "ReceivedItems":
-            self.items_unprocessed += [x.item for x in args["items"]]
-
-        super()
-
 
     async def readByName(self, ctx: "BizHawkClientContext", name:str, bytecount:int) -> list:
         region, addr, mask = self.codepoints.get(name, ("ROM", 0x0, 0x0))
