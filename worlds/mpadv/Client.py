@@ -76,6 +76,7 @@ class MPADVClient(BizHawkClient):
     system = "GBA"
     patch_suffix = ".apmpadv"
     local_checked_locations: Set[int]
+    items_unprocessed: list[int]    # item queue
 
     codepoints = {
         "Quests Discovered":    ("EWRAM", 0x34E00, 0xFF),
@@ -85,7 +86,7 @@ class MPADVClient(BizHawkClient):
         "Current Char":         ("unknown", 0x440E, 0xFF),
         "Minigames Discovered": ("unknown", 0x398C1, 0xFF),
         "Current Minigame":     ("unknown", 0x440D, 0xFF),
-        "Mushroom Total":       ("unknown", 0x3CBF1, 0x0F),
+        "Mushroom Total":       ("EWRAM", 0x3CBFD, 0xFF),
         "Passport Creation":    ("unknown", 0x39055, 0x01)
     }
     """
@@ -191,8 +192,35 @@ class MPADVClient(BizHawkClient):
 
             await self.writeByName(ctx, "Quests Completed", quest_hex)
 
+            # one-time item queue clearing
+            processed = []
+            newshroom = 0
+            for item in self.items_unprocessed:
+                if item == mpadv_items["Roll Mushroom"] and newshroom[0] < 99:
+                    newshroom += 1
+                    processed.append(item)
+
+            if newshroom:
+                currentshroom = await self.readByName(ctx, "Mushroom Total", 1)
+
+                await self.writeByName(ctx, "Mushroom Total", [currentshroom + newshroom])
+
+            for item in processed:
+                try:
+                    self.items_unprocessed.remove(item)
+                except ValueError:
+                    pass
+
+
         except bizhawk.RequestFailedError:
             pass
+
+    async def on_package(self, ctx: "BizHawkClientContext", cmd: str, args: dict) -> None:
+        if cmd == "ReceivedItems":
+            self.items_unprocessed += [x.item for x in args["items"]]
+
+        super()
+
 
     async def readByName(self, ctx: "BizHawkClientContext", name:str, bytecount:int) -> list:
         region, addr, mask = self.codepoints.get(name, ("ROM", 0x0, 0x0))
