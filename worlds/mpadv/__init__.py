@@ -58,9 +58,12 @@ class MPADVWorld(World):
         # Having an item in the start inventory won't remove it from the pool.
         # If an item can't have duplicates it has to be excluded manually.
 
-        # for now, just create the 50 quest completions for the 50 quest locations..
+        junk = len(mpadv_locations)
         self.multiworld.itempool += [self.create_item("Quest Completion") for _ in range(0, 50)]
+        junk -= 50
 
+        if junk > 0:
+            self.multiworld.itempool += [self.create_item("Roll Mushroom") for _ in range(0, junk)]
 
     def create_item(self, name:str) -> Item:
         item_id = self.item_name_to_id[name]
