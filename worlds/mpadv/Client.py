@@ -136,6 +136,11 @@ class MPADVClient(BizHawkClient):
 
                 if quests_loc[byte] & (1 << bit):
                     locations_sent.append(quest_id)
+                    if not ctx.finished_game and quest_name == "Bowser Quest: Final Showdown":
+                        await ctx.send_msgs([{
+                            "cmd": "StatusUpdate",
+                            "status": ClientStatus.CLIENT_GOAL
+                        }])
 
                 bit += 1
 
