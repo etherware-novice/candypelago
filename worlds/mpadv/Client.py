@@ -193,7 +193,7 @@ class MPADVClient(BizHawkClient):
             if self.item_process > len(ctx.items_received):
                 self.item_process = 0
             elif self.item_process < len(ctx.items_received):
-                curitem = ctx.items_received[self.item_process]
+                curitem = ctx.items_received[self.item_process].item
                 if curitem == mpadv_items["Roll Mushroom"]:
                     currentshroom = await self.readByName(ctx, "Mushroom Total", 1)
                     currentshroom[0] += 1
@@ -204,7 +204,8 @@ class MPADVClient(BizHawkClient):
                 else:
                     self.item_process += 1
 
-        except bizhawk.RequestFailedError:
+        except bizhawk.RequestFailedError as e:
+            print(e)
             pass
 
     async def readByName(self, ctx: "BizHawkClientContext", name:str, bytecount:int) -> list:
