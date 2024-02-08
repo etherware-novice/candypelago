@@ -1,48 +1,14 @@
-import time
 from typing import TYPE_CHECKING, Optional, Dict, Set, List
-import struct
-from BaseClasses import MultiWorld
 from NetUtils import ClientStatus
-from collections import defaultdict
-import sys
-import logging
-import math
-import asyncio
 from itertools import zip_longest
 from .Items import mpadv_items
 from .Locations import mpadv_locations
-
-if "worlds._bizhawk" not in sys.modules:
-    import importlib
-    import os
-    import zipimport
-
-    bh_apworld_path = os.path.join(os.path.dirname(sys.modules["worlds"].__file__), "_bizhawk.apworld")
-    if os.path.isfile(bh_apworld_path):
-        importer = zipimport.zipimporter(bh_apworld_path)
-        spec = importer.find_spec(os.path.basename(bh_apworld_path).rsplit(".", 1)[0])
-        mod = importlib.util.module_from_spec(spec)
-        mod.__package__ = f"worlds.{mod.__package__}"
-        mod.__name__ = f"worlds.{mod.__name__}"
-        sys.modules[mod.__name__] = mod
-        # importer.exec_module(mod)     # no idea what this does but the mlss code did it
-    elif not os.path.isdir(os.path.splitext(bh_apworld_path)[0]):
-        raise Exception("Did not find _bizhawk.apworld required to play Mario Party Advance.")
 
 import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
-else:
-    BizHawkClientContext = object
-
-# Add .apmpadv suffix to bizhawk client
-from worlds.LauncherComponents import SuffixIdentifier, components
-for component in components:
-    if component.script_name == "BizHawkClient":
-        component.file_identifier = SuffixIdentifier(*(*component.file_identifier.suffixes, ".apmpadv"))
-        break
 
 # how the bitfield is ordered in memory, seemingly random order
 bitorder = [
@@ -108,17 +74,9 @@ bitorder = [
 class MPADVClient(BizHawkClient):
     game = "Mario Party Advance"
     system = "GBA"
+    patch_suffix = ".apmpadv"
     local_checked_locations: Set[int]
-    goal_flag: int
-    rom_slot_name: Optional[str]
-    player: int
 
-    """
-    A mapping for ram values with recognizable names.
-    The first string in the value set is memory region, second is the address,
-    and third is the optional bitmask.
-    If the bitmask is not used, leave it as 0xFF
-    """
     codepoints = {
         "Quests Discovered":    ("EWRAM", 0x34E00, 0xFF),
         "Quests Completed":     ("EWRAM", 0x34E14, 0xFF),
@@ -129,23 +87,36 @@ class MPADVClient(BizHawkClient):
         "Mushroom Total":       ("unknown", 0x3CBF1, 0x0F),
         "Passport Creation":    ("unknown", 0x39055, 0x01)
     }
+    """
+    A mapping for ram values with recognizable names.
+    The first string in the value set is memory region, second is the address,
+    and third is the optional bitmask.
+    If the bitmask is not used, leave it as 0xFF
+    """
 
     def __init__(self) -> None:
         super().__init__()
         self.local_checked_locations = set()
-        self.local_set_events = {}
-        self.local_found_key_items = {}
-        self.lock = asyncio.Lock()
 
-    async def validate_rom(self, ctx: BizHawkClientContext) -> bool:
+    async def validate_rom(self, ctx: "BizHawkClientContext") -> bool:
+        try:
+            # Check ROM name/patch version
+            rom_name = ((await bizhawk.read(ctx.bizhawk_ctx, [(0xA0, 12, "ROM")]))[0])
+            if rom_name.decode("ascii") != "MARIOPARTYUS":
+                return False
+
+        except UnicodeDecodeError:
+            return False
+        except bizhawk.RequestFailedError:
+            return False  # Should verify on the next pass
+
         ctx.game = self.game
         ctx.items_handling = 0b101
-        ctx.want_slot_data = True
         ctx.watcher_timeout = 0.125
 
         return True
 
-    async def game_watcher(self, ctx: BizHawkClientContext) -> None:
+    async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
         from CommonClient import logger
 
         try:
@@ -199,7 +170,7 @@ class MPADVClient(BizHawkClient):
         except bizhawk.RequestFailedError:
             pass
 
-    async def readByName(self, ctx: BizHawkClientContext, name:str, bytecount:int) -> list:
+    async def readByName(self, ctx: "BizHawkClientContext", name:str, bytecount:int) -> list:
         region, addr, mask = self.codepoints.get(name, ("ROM", 0x0, 0x0))
         shift = 0
         if mask == 0x0:
@@ -215,7 +186,7 @@ class MPADVClient(BizHawkClient):
         ramslice = await bizhawk.read(ctx.bizhawk_ctx, [(addr, bytecount, region)])
         return [(x & mask) >> shift for x in ramslice[0]]
 
-    async def writeByName(self, ctx: BizHawkClientContext, name:str, written) -> None:
+    async def writeByName(self, ctx: "BizHawkClientContext", name:str, written) -> None:
         region, addr, mask = self.codepoints.get(name, ("ROM", 0x0, 0x0))
         bytecount = len(written)
         if mask == 0x0:
