@@ -143,5 +143,5 @@ locChar_table = [
 ]
 
 mpadv_locations = {name: id for id, name in enumerate(
-    [*locQuest_table, *locChar_table], 5454540
+    [*locQuest_table, *locChar_table], 3245432567842
 )}

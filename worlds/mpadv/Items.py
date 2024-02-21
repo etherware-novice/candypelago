@@ -11,4 +11,4 @@ mpadv_items_balance: typing.Dict[str, int] = {
     "Roll Mushroom": 0  # junk item
 }
 
-mpadv_items = {name:id for id, name in enumerate(mpadv_items_balance.keys(), 5454541)}
+mpadv_items = {name:id for id, name in enumerate(mpadv_items_balance.keys(), 3245432567842)}
