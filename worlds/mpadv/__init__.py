@@ -58,7 +58,7 @@ class MPADVWorld(World):
         # Having an item in the start inventory won't remove it from the pool.
         # If an item can't have duplicates it has to be excluded manually.
 
-        itempool = [self.create_item("Quest Completion") for _ in range(0, 50)]
+        itempool = [self.create_item("Quest Completion") for _ in range(0, 100)]
         while len(itempool) < self.location_count:
             itempool.append(self.create_item(self.get_filler_item_name()))
 
