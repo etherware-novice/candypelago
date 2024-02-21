@@ -149,6 +149,8 @@ class MPADVClient(BizHawkClient):
                 if bit > 7:
                     bit = 0
                     byte += 1
+                if byte > 7:
+                    break
 
                 if quests_loc[byte] & (1 << bit):
                     locations_sent.append(quest_id)
